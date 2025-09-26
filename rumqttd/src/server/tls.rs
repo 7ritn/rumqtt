@@ -242,16 +242,46 @@ impl TLSAcceptor {
         
         #[cfg(feature = "verify-client-fido")]
         let builder = {
+            macro_rules! env_var_or_default {
+                ($name:expr, $default:expr) => {
+                    std::env::var($name).unwrap_or_else(|_| $default.to_string())
+                };
+            }
+
+            let fido_rp_id = env_var_or_default!("FIDO_RP_ID", "localhost");
+            let fido_rp_name = env_var_or_default!("FIDO_RP_NAME", "localhost");
+            let fido_user_verification = env_var_or_default!("FIDO_USER_VERIFICATION", "preferred");
+            let fido_authenticator_attachment = env_var_or_default!("FIDO_AUTHENTICATOR_ATTACHMENT", "CrossPlatform");
+            let fido_ticket = env_var_or_default!("FIDO_TICKET", "4,3,2,1");
+            let fido_timeout = env_var_or_default!("FIDO_TIMEOUT", "60000").parse::<u32>().unwrap();
+            let fido_mandatory = env_var_or_default!("FIDO_DEBUG", "true").parse::<bool>().unwrap();
+            let fido_db_path = env_var_or_default!("FIDO_DB_PATH", "./fido.db3");
+
+            let ticket: Vec<u8> = fido_ticket.split(',').map(|s| s.trim().parse().unwrap()).collect();
+
+            // Parse FIDO user verification policy
+            let user_verification = match fido_user_verification.to_lowercase().as_str() {
+                "required" => FidoPolicy::Required,
+                "preferred" => FidoPolicy::Preferred,
+                _ => FidoPolicy::Discouraged,
+            };
+
+            // Parse FIDO authenticator attachment
+            let attachment = match fido_authenticator_attachment.to_lowercase().as_str() {
+                "platform" => FidoAuthenticatorAttachment::Platform,
+                _ => FidoAuthenticatorAttachment::CrossPlatform,
+            };
+
             let fido_config = FidoServer::new(
-                "localhost".to_string(),
-                "localhost".to_string(),
+                fido_rp_id,
+                fido_rp_name,
+                user_verification,
                 FidoPolicy::Required,
-                FidoPolicy::Required,
-                FidoAuthenticatorAttachment::CrossPlatform,
-                60000,
-                vec![4, 3, 2, 1],
-                true,
-                "/home/triton/Development/rustls-fido/fido.db3"
+                attachment,
+                fido_timeout,
+                ticket,
+                fido_mandatory,
+                &fido_db_path
             );
             
             builder.with_fido(fido_config)
