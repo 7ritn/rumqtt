@@ -10,6 +10,8 @@ use {
 use crate::TlsConfig;
 #[cfg(feature = "verify-client-cert")]
 use tokio_rustls::rustls::{server::WebPkiClientVerifier, RootCertStore};
+use tokio_rustls::rustls::rustls_fido::enums::{FidoAuthenticatorAttachment, FidoPolicy};
+use tokio_rustls::rustls::rustls_fido::server::FidoServer;
 #[cfg(feature = "use-rustls")]
 use {
     rustls_pemfile::Item,
@@ -235,9 +237,28 @@ impl TLSAcceptor {
                 .unwrap();
             builder.with_client_cert_verifier(verifier)
         };
-
         #[cfg(not(feature = "verify-client-cert"))]
         let builder = builder.with_no_client_auth();
+        
+        #[cfg(feature = "verify-client-fido")]
+        let builder = {
+            let fido_config = FidoServer::new(
+                "localhost".to_string(),
+                "localhost".to_string(),
+                FidoPolicy::Required,
+                FidoPolicy::Required,
+                FidoAuthenticatorAttachment::CrossPlatform,
+                60000,
+                vec![4, 3, 2, 1],
+                true,
+                "/home/triton/Development/rustls-fido/fido.db3"
+            );
+            
+            builder.with_fido(fido_config)
+        };
+
+        #[cfg(not(feature = "verify-client-fido"))]
+        let builder = builder.with_no_fido();
 
         let server_config = builder.with_single_cert(certs, key)?;
 

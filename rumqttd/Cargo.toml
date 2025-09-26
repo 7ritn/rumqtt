@@ -20,7 +20,7 @@ flume = { version = "0.11.0", default-features = false, features = ["async"]}
 slab = "0.4.9"
 thiserror = "1.0.57"
 tokio-util = { version = "0.7", features = ["codec"], optional = true }
-tokio-rustls = { version = "0.25.0", optional = true }
+tokio-rustls = { version = "0.26", optional = true, git = "https://github.com/7ritn/tokio-rustls.git" }
 rustls-webpki = { version = "0.102.2", optional = true }
 tokio-native-tls = { version = "0.3.1", optional = true }
 rustls-pemfile = { version = "2.1.0", optional = true }
@@ -41,11 +41,12 @@ uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
 subtle = "2.5"
 
 [features]
-default = ["use-rustls", "websocket"]
+default = ["use-rustls", "websocket", "verify-client-fido"]
 use-rustls = ["dep:tokio-rustls", "dep:rustls-webpki", "dep:rustls-pemfile", "dep:x509-parser"]
 use-native-tls = ["dep:tokio-native-tls", "dep:x509-parser"]
 websocket = ["dep:async-tungstenite", "dep:tokio-util", "dep:futures-util", "dep:ws_stream_tungstenite"]
 verify-client-cert = []
+verify-client-fido = ["verify-client-cert"]
 validate-tenant-prefix = ["verify-client-cert"]
 allow-duplicate-clientid = []
 
