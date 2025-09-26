@@ -22,6 +22,10 @@ The rumqtt daemon can be configured using environment variables.
 | `FIDO_MANDATORY`                | Make FIDO authentication mandatory     | `true`                        | `false`                           |
 | `FIDO_DB_PATH`                  | Path to the FIDO database file         | `./fido.db3`                  | `/var/lib/fido.db3`               |
 
+Run the MQTT broker with `cargo run --package rumqttd --bin rumqttd --config rumqttd/rumqttd.toml`
+
+This uses an example configuration file located at `rumqttd/rumqttd.toml`.
+
 For a client example see [rumqtt-fido-client](https://github.com/7ritn/rumqtt-fido-client).
 
 # License
